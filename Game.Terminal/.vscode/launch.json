@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "调试 Game.Terminal",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build Game.Terminal",
+            "program": "${workspaceFolder}/bin/Debug/net10.0/Game.Terminal.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+namespace Game.Core;
+
+public readonly struct Position(int x, int y)
+{
+	public int X { get; } = x;
+	public int Y { get; } = y;
+}
+public enum Direction
+{
+	Up,
+	Down,
+	Left,
+	Right
+}
