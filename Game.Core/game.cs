@@ -18,7 +18,6 @@ public class Game(
 
 	public IReadOnlyList<Food> Foods => foodList.AsReadOnly();
 	public IReadOnlyList<Player> Players => playerList.AsReadOnly();
-
 	public bool IsOver { get; private set; } = false;
 	double foodSpawnElapsedSeconds = 0;
 
@@ -29,30 +28,9 @@ public class Game(
 	&& player.Snake.RequestTurn(direction);
 
 	bool IspositionAvailable(Position position)
-	{
-		if (!Board.Contains(position))
-		{
-			return false;
-		}
-
-		foreach (var player in playerList)
-		{
-			if (player.Snake.Body.Contains(position))
-			{
-				return false;
-			}
-		}
-
-		foreach (var food in foodList)
-		{
-			if (food.Position.Equals(position))
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
+	=> !foodList.Any(food => food.Position.Equals(position))
+	&& !playerList.Any(player => player.Snake.Body.Contains(position))
+	&& Board.Contains(position);
 
 	Position? RandomPosition()
 	{
@@ -69,30 +47,26 @@ public class Game(
 			}
 		}
 
-		if (availablePositions.Count > 0)
-		{
-			Random random = new();
-			return availablePositions[random.Next(availablePositions.Count)];
-		}
-
-		return null;
+		return availablePositions.Count > 0 ?
+		availablePositions[new Random().Next(availablePositions.Count)] : null;
 	}
 
 	void IfSpawnFood()
 	{
-		if (foodSpawnElapsedSeconds >= foodSpawnIntervalSeconds)
+		if (foodSpawnElapsedSeconds < foodSpawnIntervalSeconds)
 		{
-			foodSpawnElapsedSeconds -= foodSpawnIntervalSeconds;
-			for (int i = 0; i < foodSpawnPerPlayer * playerList.Count; i++)
+			return;
+		}
+
+		foodSpawnElapsedSeconds -= foodSpawnIntervalSeconds;
+		for (int i = 0;
+		i < foodSpawnPerPlayer * playerList.Count
+		&& foodList.Count < foodLimitPerPlayer * playerList.Count;
+		i++)
+		{
+			if (RandomPosition() is { } foodPosition)
 			{
-				if (foodList.Count < foodLimitPerPlayer * playerList.Count)
-				{
-					var newFoodPosition = RandomPosition();
-					if (newFoodPosition.HasValue)
-					{
-						foodList.Add(new Food(newFoodPosition.Value));
-					}
-				}
+				foodList.Add(new Food(foodPosition));
 			}
 		}
 	}
@@ -100,27 +74,13 @@ public class Game(
 	void UpdatePlayerStates(Player player, double elapsedSeconds)
 	{
 		var snake = player.Snake;
-		if (!player.IsAlive)
-		{
-			return;
-		}
-
-		if (!snake.AdvanceTime(elapsedSeconds))
+		if (!player.IsAlive || !snake.AdvanceTime(elapsedSeconds))
 		{
 			return;
 		}
 
 		var nextPosition = snake.GetNextPosition();
-		int foodIndex = -1;
-		for (int i = 0; i < foodList.Count; i++)
-		{
-			if (foodList[i].Position.Equals(nextPosition))
-			{
-				foodIndex = i;
-				break;
-			}
-		}
-
+		int foodIndex = foodList.FindIndex(food => food.Position.Equals(nextPosition));
 		bool willGrow = foodIndex != -1;
 		if (HasCollision(player, nextPosition, willGrow))
 		{
@@ -134,50 +94,32 @@ public class Game(
 			snake.Grow(nextPosition);
 			player.IncreaseScore(3);
 		}
+
 		else
 		{
 			snake.Move(nextPosition);
 		}
 
 		bool HasCollision(Player movingPlayer, Position nextPosition, bool willGrow)
+		=> !Board.Contains(nextPosition) || playerList.Any(player =>
 		{
-			if (!Board.Contains(nextPosition))
-			{
-				return true;
-			}
-
-			List<Position> occupiedPositions = [];
-			foreach (var player in playerList)
-			{
-				for (int i = 0; i < player.Snake.Body.Count; i++)
-				{
-					var pos = player.Snake.Body[i];
-					if (!willGrow && player == movingPlayer && i == player.Snake.Body.Count - 1)
-					{
-						continue;
-					}
-
-					occupiedPositions.Add(pos);
-				}
-			}
-
-			return occupiedPositions.Contains(nextPosition);
-		}
+			var body = player.Snake.Body;
+			int checkCount = !willGrow && player == movingPlayer
+			? body.Count - 1
+			: body.Count;
+			return body.Take(checkCount).Contains(nextPosition);
+		});
 	}
 
 	public void Step(double elapsedSeconds)
 	{
 		foodSpawnElapsedSeconds += elapsedSeconds;
-		IsOver = true;
 		foreach (var player in playerList)
 		{
 			UpdatePlayerStates(player, elapsedSeconds);
-			if (player.IsAlive)
-			{
-				IsOver = false;
-			}
 		}
 
+		IsOver = !playerList.Any(player => player.IsAlive);
 		IfSpawnFood();
 	}
 }

@@ -9,4 +9,5 @@ public class Player(string name, Snake snake)
 
 	public void IncreaseScore(int amount) => Score += amount;
 	public void Die() => IsAlive = false;
+
 }
