@@ -6,7 +6,7 @@ public class Snake
 	double moveElapsedSeconds = 0;
 
 	readonly List<Position> body;
-	Position Head => body[0];
+	public Position Head => body[0];
 
 	public Direction CurrentDirection { get; private set; }
 
@@ -55,11 +55,7 @@ public class Snake
 
 	public bool RequestTurn(Direction newDirection)
 	{
-		bool isOpposite = (CurrentDirection, newDirection) is
-		(Direction.Up, Direction.Down) or
-		(Direction.Down, Direction.Up) or
-		(Direction.Left, Direction.Right) or
-		(Direction.Right, Direction.Left);
+		bool isOpposite = newDirection == CurrentDirection.Opposite;
 
 		if (pendingDirection.HasValue || newDirection == CurrentDirection || isOpposite)
 		{

@@ -11,6 +11,7 @@ static Game.Core.Game Creategame()
 	return new(board, [], [player], 1, 2, 8);
 }
 
+Console.CursorVisible = false;
 while (true)
 {
 	var game = Creategame();
@@ -59,3 +60,5 @@ while (true)
 		break;
 	}
 }
+
+Console.CursorVisible = true;

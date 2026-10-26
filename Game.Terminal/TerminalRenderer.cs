@@ -21,9 +21,9 @@ public class TerminalRenderer
 				var position = new Position(x, y);
 				string symbol = position switch
 				{
-					_ when game.Players.Count > 0 && game.Players[0].Snake.Body[0].Equals(position) => "@ ",
+					_ when game.Players.Count > 0 && game.Players[0].Snake.Head == position => "@ ",
 					_ when game.Players.Count > 0 && game.Players[0].Snake.Body.Contains(position) => "o ",
-					_ when game.Foods.Any(food => food.Position.Equals(position)) => "* ",
+					_ when game.Foods.Any(food => food.Position == position) => "* ",
 					_ => "  "
 				};
 				Console.Write(symbol);
@@ -44,18 +44,18 @@ public class TerminalRenderer
 	public static void DrawInfo(Core.Game game)
 	{
 		Console.WriteLine("操作：方向键移动");
-		if (game.Players.Count > 0)
+		if (game.Players is [var player, ..])
 		{
-			Console.WriteLine($"Score: {game.Players[0].Score}");
+			Console.WriteLine($"Score: {player.Score}");
 		}
 	}
 
 	public static void DrawGameOver(Core.Game game)
 	{
 		Console.WriteLine("Game Over!");
-		if (game.Players.Count > 0)
+		if (game.Players is [var player, ..])
 		{
-			Console.WriteLine($"Final Score: {game.Players[0].Score}");
+			Console.WriteLine($"Final Score: {player.Score}");
 		}
 
 		Console.WriteLine("按A重新开始,按ESC退出");

@@ -9,9 +9,6 @@ public class Game(
 	int foodLimitPerPlayer
 )
 {
-	readonly int foodSpawnPerPlayer = foodSpawnPerPlayer;
-	readonly int foodLimitPerPlayer = foodLimitPerPlayer;
-	readonly double foodSpawnIntervalSeconds = foodSpawnIntervalSeconds;
 	public Board Board { get; } = board;
 	readonly List<Food> foodList = [.. foods];
 	readonly List<Player> playerList = [.. players];
@@ -28,7 +25,7 @@ public class Game(
 	&& player.Snake.RequestTurn(direction);
 
 	bool IspositionAvailable(Position position)
-	=> !foodList.Any(food => food.Position.Equals(position))
+	=> !foodList.Contains(new Food(position))
 	&& !playerList.Any(player => player.Snake.Body.Contains(position))
 	&& Board.Contains(position);
 
@@ -66,7 +63,7 @@ public class Game(
 		{
 			if (RandomPosition() is { } foodPosition)
 			{
-				foodList.Add(new Food(foodPosition));
+				foodList.Add(new(foodPosition));
 			}
 		}
 	}
@@ -80,7 +77,7 @@ public class Game(
 		}
 
 		var nextPosition = snake.GetNextPosition();
-		int foodIndex = foodList.FindIndex(food => food.Position.Equals(nextPosition));
+		int foodIndex = foodList.FindIndex(food => food.Position == nextPosition);
 		bool willGrow = foodIndex != -1;
 		if (HasCollision(player, nextPosition, willGrow))
 		{

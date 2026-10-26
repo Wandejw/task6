@@ -2,11 +2,8 @@ using System.Diagnostics;
 
 namespace Game.Core;
 
-public readonly struct Position(int x, int y)
+public readonly record struct Position(int X, int Y)
 {
-	public int X { get; } = x;
-	public int Y { get; } = y;
-
 	public static Position operator +(Position a, Position b)
 		=> new(a.X + b.X, a.Y + b.Y);
 }
@@ -28,6 +25,15 @@ public static class PositionExtensions
 			Direction.Down => new(0, 1),
 			Direction.Left => new(-1, 0),
 			Direction.Right => new(1, 0),
+			_ => throw new UnreachableException(),
+		};
+
+		public Direction Opposite => dir switch
+		{
+			Direction.Up => Direction.Down,
+			Direction.Down => Direction.Up,
+			Direction.Right => Direction.Left,
+			Direction.Left => Direction.Right,
 			_ => throw new UnreachableException(),
 		};
 	}

@@ -1,10 +1,7 @@
 namespace Game.Core;
 
-public class Board(int width, int height)
+public record class Board(int Width, int Height)
 {
-	public int Width { get; } = width;
-	public int Height { get; } = height;
-
 	public bool Contains(Position position)
 	=> position.X >= 0
 	&& position.X < Width
