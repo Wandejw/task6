@@ -1,4 +1,6 @@
-﻿using Game.Core;
+﻿using R3;
+
+using Game.Core;
 using Game.Terminal;
 
 using System.Diagnostics;
@@ -10,6 +12,19 @@ static Game.Core.Game Creategame()
 	Player player = new("Player", snake);
 	return new(board, [], [player], 1, 2, 8);
 }
+
+using var wakeUp = new AutoResetEvent(false);
+var ticks = Observable.Interval(TimeSpan.FromMilliseconds(20))
+	.Prepend(default(Unit))
+	.Select(static _ => TimeProvider.System.GetTimestamp())
+	.Pairwise()
+	.Select(p => TimeProvider.System.GetElapsedTime(p.Previous, p.Current));
+var subscription = ticks.Subscribe(_ =>
+{
+	wakeUp.Set();
+});
+Console.ReadLine();
+subscription.Dispose();
 
 Console.CursorVisible = false;
 while (true)

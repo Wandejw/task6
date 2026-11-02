@@ -47,8 +47,14 @@ public class Snake
 
 	public void Move(Position nextPosition)
 	{
-		Grow(nextPosition);
-		body.RemoveAt(body.Count - 1);
+		var newBody = CalculateMovedBody(body, nextPosition);
+		body.Clear();
+		body.AddRange(newBody);
+		if (pendingDirection is { } dir)
+		{
+			CurrentDirection = dir;
+			pendingDirection = null;
+		}
 	}
 
 	Direction? pendingDirection = null;
@@ -64,5 +70,13 @@ public class Snake
 
 		pendingDirection = newDirection;
 		return true;
+	}
+
+	public static List<Position> CalculateMovedBody(
+	IReadOnlyList<Position> oldBody,
+	Position nextPosition)
+	{
+		List<Position> newBody = [nextPosition, .. oldBody.Take(oldBody.Count - 1)];
+		return newBody;
 	}
 }
