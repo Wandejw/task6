@@ -19,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Game.Core\Game.Core.csproj" />
     <ProjectReference Include="..\Game.Terminal\Game.Terminal.csproj" />
   </ItemGroup>
 
