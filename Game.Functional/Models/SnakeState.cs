@@ -2,9 +2,7 @@ using System.Collections.Immutable;
 
 namespace Game.Functional.Models;
 
-class SnakeState(ImmutableArray<Position> initialBody, Direction initialDirection)
+public record SnakeState(ImmutableArray<Position> Body, Direction CurrentDirection)
 {
-	public Position Head { get; } = initialBody[0];
-	public Direction CurrentDirection { get; } = initialDirection;
-	public ImmutableArray<Position> Body { get; } = initialBody;
+	public Position Head => Body[0];
 }

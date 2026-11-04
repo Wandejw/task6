@@ -1,13 +1,7 @@
 namespace Game.Functional.Models;
 
-class GameRules(
-	double moveIntervalSeconds,
-	double foodSpawnIntervalSeconds,
-	int foodSpawnCount,
-	int foodLimit)
-{
-	public double MoveIntervalSeconds { get; } = moveIntervalSeconds;
-	public double FoodSpawnIntervalSeconds { get; } = foodSpawnIntervalSeconds;
-	public int FoodSpawnCount { get; } = foodSpawnCount;
-	public int FoodLimit { get; } = foodLimit;
-}
+public record GameRules(
+	double MoveIntervalSeconds,
+	double FoodSpawnIntervalSeconds,
+	int FoodSpawnCount,
+	int FoodLimit);

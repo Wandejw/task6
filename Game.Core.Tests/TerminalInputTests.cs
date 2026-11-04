@@ -1,5 +1,7 @@
 using Game.Terminal;
 
+using FunctionalDirection = global::Game.Functional.Models.Direction;
+
 namespace Game.Core.Tests;
 
 public class TerminalInputTests
@@ -25,11 +27,11 @@ public class TerminalInputTests
 	}
 
 	[Theory]
-	[InlineData(ConsoleKey.UpArrow, Direction.Up)]
-	[InlineData(ConsoleKey.DownArrow, Direction.Down)]
-	[InlineData(ConsoleKey.LeftArrow, Direction.Left)]
-	[InlineData(ConsoleKey.RightArrow, Direction.Right)]
-	public void ArrowKeyMapsToDirection(ConsoleKey key, Direction expected)
+	[InlineData(ConsoleKey.UpArrow, FunctionalDirection.Up)]
+	[InlineData(ConsoleKey.DownArrow, FunctionalDirection.Down)]
+	[InlineData(ConsoleKey.LeftArrow, FunctionalDirection.Left)]
+	[InlineData(ConsoleKey.RightArrow, FunctionalDirection.Right)]
+	public void ArrowKeyMapsToDirection(ConsoleKey key, FunctionalDirection expected)
 		=> Assert.Equal(expected, TerminalInput.MapDirection(key));
 
 	[Fact]

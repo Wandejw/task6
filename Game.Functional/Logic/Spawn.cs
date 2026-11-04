@@ -17,10 +17,9 @@ static class Spawn
 			}
 		}
 
-		return positions
+		return [.. positions
 		.Where(position
 		=> !world.Player.Snake.Body.Contains(position)
-		&& !world.Foods.Contains(position))
-		.ToImmutableArray();
+		&& !world.Foods.Contains(position))];
 	}
 }

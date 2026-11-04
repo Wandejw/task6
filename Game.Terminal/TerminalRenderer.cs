@@ -1,12 +1,13 @@
-using Game.Core;
+using Game.Functional.Models;
+
 namespace Game.Terminal;
 
 public class TerminalRenderer
 {
-	public static void DrawBoard(Core.Game game)
+	public static void DrawBoard(WorldState world)
 	{
-		int width = game.Board.Width;
-		int height = game.Board.Height;
+		int width = world.Width;
+		int height = world.Height;
 		for (int x = 0; x < width + 2; x++)
 		{
 			Console.Write("##");
@@ -21,9 +22,9 @@ public class TerminalRenderer
 				var position = new Position(x, y);
 				string symbol = position switch
 				{
-					_ when game.Players.Count > 0 && game.Players[0].Snake.Head == position => "@ ",
-					_ when game.Players.Count > 0 && game.Players[0].Snake.Body.Contains(position) => "o ",
-					_ when game.Foods.Any(food => food.Position == position) => "* ",
+					_ when world.Player.Snake.Head == position => "@ ",
+					_ when world.Player.Snake.Body.Contains(position) => "o ",
+					_ when world.Foods.Contains(position) => "* ",
 					_ => "  "
 				};
 				Console.Write(symbol);
@@ -41,23 +42,16 @@ public class TerminalRenderer
 		Console.WriteLine();
 	}
 
-	public static void DrawInfo(Core.Game game)
+	public static void DrawInfo(WorldState world)
 	{
 		Console.WriteLine("操作：方向键移动");
-		if (game.Players is [var player, ..])
-		{
-			Console.WriteLine($"Score: {player.Score}");
-		}
+		Console.WriteLine($"Length: {world.Player.Snake.Body.Length}");
 	}
 
-	public static void DrawGameOver(Core.Game game)
+	public static void DrawGameOver(WorldState world)
 	{
 		Console.WriteLine("Game Over!");
-		if (game.Players is [var player, ..])
-		{
-			Console.WriteLine($"Final Score: {player.Score}");
-		}
-
+		Console.WriteLine($"Final Length: {world.Player.Snake.Body.Length}");
 		Console.WriteLine("按A重新开始,按ESC退出");
 	}
 }

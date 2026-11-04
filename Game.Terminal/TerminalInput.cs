@@ -1,4 +1,5 @@
-using Game.Core;
+using Game.Functional.Models;
+
 namespace Game.Terminal;
 
 public static class TerminalInput

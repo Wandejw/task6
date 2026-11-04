@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Game.Core\Game.Core.csproj" />
+	<ProjectReference Include="..\Game.Functional\Game.Functional.csproj" />
+	<ProjectReference Include="..\Game.Application\Game.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

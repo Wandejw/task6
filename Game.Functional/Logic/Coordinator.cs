@@ -4,8 +4,16 @@ using Game.Functional.Models;
 
 namespace Game.Functional.Logic;
 
-static class Coordinator
+public static class Coordinator
 {
+	public static WorldState CreateWorld(int width, int height, Position head)
+	{
+		SnakeState snake = new(
+			[head, new(head.X - 1, head.Y), new(head.X - 2, head.Y)], Direction.Right);
+		PlayerState player = new(snake, null, 0);
+		return new(width, height, player, []);
+	}
+
 	public static WorldState RequestTurn(WorldState world, Direction requestedDirection)
 	{
 		var player = world.Player;
@@ -17,10 +25,15 @@ static class Coordinator
 			return world;
 		}
 
-		var newPlayer = new PlayerState(
-			snake, requestedDirection, player.MoveElapsedSeconds);
+		var newPlayer = player with
+		{
+			PendingDirection = requestedDirection
+		};
 
-		return new WorldState(world.Width, world.Height, newPlayer, world.Foods, world.FoodSpawnElapsedSeconds);
+		return world with
+		{
+			Player = newPlayer
+		};
 	}
 
 	public static (WorldState World, bool IsOver) Update(
@@ -36,14 +49,22 @@ static class Coordinator
 			? accumulatedSeconds - rules.MoveIntervalSeconds
 			: accumulatedSeconds;
 
-		world = new WorldState(world.Width, world.Height,
-			new(player.Snake, player.PendingDirection, remainingSeconds),
-			world.Foods, world.FoodSpawnElapsedSeconds + elapsedSeconds);
+		world = world with
+		{
+			Player = player with
+			{
+				MoveElapsedSeconds = remainingSeconds
+			},
+			FoodSpawnElapsedSeconds = world.FoodSpawnElapsedSeconds + elapsedSeconds
+		};
 
 		if (shouldMove)
 		{
-			var snake = new SnakeState(player.Snake.Body,
-				player.PendingDirection ?? player.Snake.CurrentDirection);
+			var snake = player.Snake with
+			{
+				CurrentDirection = player.PendingDirection ?? player.Snake.CurrentDirection
+			};
+
 			var nextPosition = snake.Head + snake.CurrentDirection.Position;
 			snake = world.Foods.Contains(nextPosition)
 				? Movement.Grow(snake)
@@ -54,8 +75,15 @@ static class Coordinator
 			}
 
 			var remainingFoods = world.Foods.Where(food => food != nextPosition).ToImmutableArray();
-			world = new WorldState(world.Width, world.Height,
-				new(snake, null, remainingSeconds), remainingFoods, world.FoodSpawnElapsedSeconds);
+			world = world with
+			{
+				Player = world.Player with
+				{
+					Snake = snake,
+					PendingDirection = null
+				},
+				Foods = remainingFoods
+			};
 		}
 
 		if (world.FoodSpawnElapsedSeconds < rules.FoodSpawnIntervalSeconds)
@@ -71,8 +99,11 @@ static class Coordinator
 			foods = RefreshFood(foods, freePositions, randomValues.Take(spawnCount));
 		}
 
-		return (new WorldState(world.Width, world.Height, world.Player, foods,
-			world.FoodSpawnElapsedSeconds - rules.FoodSpawnIntervalSeconds), false);
+		return (world with
+		{
+			Foods = foods,
+			FoodSpawnElapsedSeconds = world.FoodSpawnElapsedSeconds - rules.FoodSpawnIntervalSeconds
+		}, false);
 
 		static ImmutableArray<Position> RefreshFood(
 			ImmutableArray<Position> currentFoods,

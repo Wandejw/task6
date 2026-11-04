@@ -1,79 +1,76 @@
-﻿using R3;
+﻿using System.Diagnostics;
 
-using Game.Core;
+using Game.Application;
+using Game.Functional.Logic;
+using Game.Functional.Models;
 using Game.Terminal;
 
-using System.Diagnostics;
-static Game.Core.Game Creategame()
+static GameViewModel Creategame()
 {
-	Board board = new(20, 12);
 	Position head = new(Random.Shared.Next(2, 18), Random.Shared.Next(2, 10));
-	Snake snake = new([head, new(head.X - 1, head.Y), new(head.X - 2, head.Y)], Direction.Right, 0.2);
-	Player player = new("Player", snake);
-	return new(board, [], [player], 1, 2, 8);
+	var world = Coordinator.CreateWorld(20, 12, head);
+	GameRules rules = new(
+		MoveIntervalSeconds: 0.2, FoodSpawnIntervalSeconds: 1,
+		FoodSpawnCount: 2, FoodLimit: 8);
+	return new(world, rules, Random.Shared);
 }
-
-using var wakeUp = new AutoResetEvent(false);
-var ticks = Observable.Interval(TimeSpan.FromMilliseconds(20))
-	.Prepend(default(Unit))
-	.Select(static _ => TimeProvider.System.GetTimestamp())
-	.Pairwise()
-	.Select(p => TimeProvider.System.GetElapsedTime(p.Previous, p.Current));
-var subscription = ticks.Subscribe(_ =>
-{
-	wakeUp.Set();
-});
-Console.ReadLine();
-subscription.Dispose();
 
 Console.CursorVisible = false;
-while (true)
+try
 {
-	var game = Creategame();
-	Console.Clear();
-	TerminalRenderer.DrawBoard(game);
-	TerminalRenderer.DrawInfo(game);
-
-	var stopwatch = Stopwatch.StartNew();
-	double previousSeconds = stopwatch.Elapsed.TotalSeconds;
-	double accumulatorSeconds = 0;
-	while (!game.IsOver)
+	while (true)
 	{
-		double currentSeconds = stopwatch.Elapsed.TotalSeconds;
-		double elapsedSeconds = currentSeconds - previousSeconds;
-		if (TerminalInput.ReadDirection() is { } direction)
+		var game = Creategame();
+		Console.Clear();
+		TerminalRenderer.DrawBoard(game.World);
+		TerminalRenderer.DrawInfo(game.World);
+
+		var stopwatch = Stopwatch.StartNew();
+		double previousSeconds = stopwatch.Elapsed.TotalSeconds;
+		double accumulatorSeconds = 0;
+		while (!game.IsOver)
 		{
-			_ = game.RequestTurn(game.Players[0], direction);
+			double currentSeconds = stopwatch.Elapsed.TotalSeconds;
+			double elapsedSeconds = currentSeconds - previousSeconds;
+			if (TerminalInput.ReadDirection() is { } direction)
+			{
+				game.RequestTurn(direction);
+			}
+
+			previousSeconds = currentSeconds;
+			accumulatorSeconds += elapsedSeconds;
+			bool needsRedraw = accumulatorSeconds >= 0.02;
+			while (accumulatorSeconds >= 0.02 && !game.IsOver)
+			{
+				game.Advance(0.02);
+				accumulatorSeconds -= 0.02;
+			}
+
+			if (needsRedraw)
+			{
+				Console.SetCursorPosition(0, 0);
+				TerminalRenderer.DrawBoard(game.World);
+				TerminalRenderer.DrawInfo(game.World);
+			}
+
+			Thread.Sleep(1);
 		}
 
-		previousSeconds = currentSeconds;
-		accumulatorSeconds += elapsedSeconds;
-		bool needsRedraw = accumulatorSeconds >= 0.02;
-		while (accumulatorSeconds >= 0.02 && !game.IsOver)
+		TerminalRenderer.DrawGameOver(game.World);
+		var choice = TerminalInput.ReadGameOverChoice();
+		while (choice == null)
 		{
-			game.Step(0.02);
-			accumulatorSeconds -= 0.02;
+			Thread.Sleep(10);
+			choice = TerminalInput.ReadGameOverChoice();
 		}
 
-		if (needsRedraw)
+		if (choice == GameOverChoice.Exit)
 		{
-			Console.SetCursorPosition(0, 0);
-			TerminalRenderer.DrawBoard(game);
-			TerminalRenderer.DrawInfo(game);
+			break;
 		}
-	}
-
-	TerminalRenderer.DrawGameOver(game);
-	var choice = TerminalInput.ReadGameOverChoice();
-	while (choice == null)
-	{
-		choice = TerminalInput.ReadGameOverChoice();
-	}
-
-	if (choice == GameOverChoice.Exit)
-	{
-		break;
 	}
 }
-
-Console.CursorVisible = true;
+finally
+{
+	Console.CursorVisible = true;
+}
