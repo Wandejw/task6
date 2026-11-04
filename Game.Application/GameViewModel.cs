@@ -5,25 +5,24 @@ using Game.Functional.Models;
 
 namespace Game.Application;
 
-public class GameViewModel(WorldState initialWorld, GameRules gameRules, Random randomSource)
+public record GameViewModel(WorldState World, GameRules Rules, Random RandomSource)
 {
-	readonly GameRules rules = gameRules;
-	readonly Random random = randomSource;
-
-	public WorldState World { get; private set; } = initialWorld;
+	public WorldState World { get; private set; } = World;
 	public bool IsOver { get; private set; }
 
 	public void RequestTurn(Direction direction)
 		=> World = Coordinator.RequestTurn(World, direction);
+	public void RequestSprint()
+		=> World = Coordinator.RequestSprint(World, Rules);
 	public void Advance(double elapsedSeconds)
 	{
-		var values = ImmutableArray.CreateBuilder<int>(rules.FoodSpawnCount);
-		for (int i = 0; i < rules.FoodSpawnCount; i++)
+		var values = ImmutableArray.CreateBuilder<int>(Rules.FoodSpawnCount);
+		for (int i = 0; i < Rules.FoodSpawnCount; i++)
 		{
-			values.Add(random.Next());
+			values.Add(RandomSource.Next());
 		}
 
 		var randomValues = values.ToImmutable();
-		(World, IsOver) = Coordinator.Update(World, elapsedSeconds, rules, randomValues);
+		(World, IsOver) = Coordinator.Update(World, elapsedSeconds, Rules, randomValues);
 	}
 }

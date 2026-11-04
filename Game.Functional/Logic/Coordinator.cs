@@ -10,7 +10,7 @@ public static class Coordinator
 	{
 		SnakeState snake = new(
 			[head, new(head.X - 1, head.Y), new(head.X - 2, head.Y)], Direction.Right);
-		PlayerState player = new(snake, null, 0);
+		PlayerState player = new(snake, null, 0, new(0, 0));
 		return new(width, height, player, []);
 	}
 
@@ -36,6 +36,25 @@ public static class Coordinator
 		};
 	}
 
+	public static WorldState RequestSprint(WorldState world, GameRules rules)
+	{
+		var player = world.Player;
+
+		var newSprint = player.Sprint with
+		{
+			SprintRemainingSeconds = rules.SprintDurationSeconds,
+			CooldownRemainingSeconds = 0
+		};
+
+		var newPlayer = player with
+		{
+			Sprint = newSprint
+		};
+		return player.Sprint.CooldownRemainingSeconds > 0 || player.Sprint.SprintRemainingSeconds > 0
+		? world
+		: world with { Player = newPlayer };
+	}
+
 	public static (WorldState World, bool IsOver) Update(
 		WorldState world,
 		double elapsedSeconds,
@@ -43,17 +62,42 @@ public static class Coordinator
 		ImmutableArray<int> randomValues)
 	{
 		var player = world.Player;
+		var sprint = player.Sprint;
+		double moveIntervalSeconds = sprint.SprintRemainingSeconds > 0
+			? rules.MoveIntervalSeconds / rules.SprintSpeedMultiplier
+			: rules.MoveIntervalSeconds;
 		double accumulatedSeconds = player.MoveElapsedSeconds + elapsedSeconds;
-		bool shouldMove = accumulatedSeconds >= rules.MoveIntervalSeconds;
+		bool shouldMove = accumulatedSeconds >= moveIntervalSeconds;
 		double remainingSeconds = shouldMove
-			? accumulatedSeconds - rules.MoveIntervalSeconds
+			? accumulatedSeconds - moveIntervalSeconds
 			: accumulatedSeconds;
+		var newSprint = sprint;
+
+		if (sprint.SprintRemainingSeconds > 0)
+		{
+			double sprintRemainingSeconds = sprint.SprintRemainingSeconds - elapsedSeconds;
+			newSprint = sprint with
+			{
+				SprintRemainingSeconds = Math.Max(0, sprintRemainingSeconds),
+				CooldownRemainingSeconds = sprintRemainingSeconds <= 0
+					? Math.Max(0, rules.SprintCooldownSeconds + sprintRemainingSeconds)
+					: 0
+			};
+		}
+		else if (sprint.CooldownRemainingSeconds > 0)
+		{
+			newSprint = sprint with
+			{
+				CooldownRemainingSeconds = Math.Max(0, sprint.CooldownRemainingSeconds - elapsedSeconds)
+			};
+		}
 
 		world = world with
 		{
 			Player = player with
 			{
-				MoveElapsedSeconds = remainingSeconds
+				MoveElapsedSeconds = remainingSeconds,
+				Sprint = newSprint
 			},
 			FoodSpawnElapsedSeconds = world.FoodSpawnElapsedSeconds + elapsedSeconds
 		};

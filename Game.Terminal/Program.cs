@@ -1,26 +1,36 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
 
 using Game.Application;
 using Game.Functional.Logic;
 using Game.Functional.Models;
 using Game.Terminal;
 
-static GameViewModel Creategame()
+static GameViewModel Creategame(GameConfig config)
 {
-	Position head = new(Random.Shared.Next(2, 18), Random.Shared.Next(2, 10));
-	var world = Coordinator.CreateWorld(20, 12, head);
-	GameRules rules = new(
-		MoveIntervalSeconds: 0.2, FoodSpawnIntervalSeconds: 1,
-		FoodSpawnCount: 2, FoodLimit: 8);
-	return new(world, rules, Random.Shared);
+	Position head = new(
+	Random.Shared.Next(2, config.Width - 2),
+	Random.Shared.Next(2, config.Height - 2));
+	var world = Coordinator.CreateWorld(config.Width, config.Height, head);
+	return new(world, config.Rules, Random.Shared);
 }
 
+string configPath = Path.Combine(AppContext.BaseDirectory, "config.json");
+string json = File.ReadAllText(configPath);
+var config = JsonSerializer.Deserialize<GameConfig>(json);
+//将 json 中的文字，按 GameConfig 的结构转换成对象，用 config 保存结果。
+if (config is null)
+{
+	Console.WriteLine("配置内容不能为 null。");
+	return;
+}
+//顶层入口
 Console.CursorVisible = false;
 try
 {
 	while (true)
 	{
-		var game = Creategame();
+		var game = Creategame(config);
 		Console.Clear();
 		TerminalRenderer.DrawBoard(game.World);
 		TerminalRenderer.DrawInfo(game.World);
@@ -32,9 +42,17 @@ try
 		{
 			double currentSeconds = stopwatch.Elapsed.TotalSeconds;
 			double elapsedSeconds = currentSeconds - previousSeconds;
-			if (TerminalInput.ReadDirection() is { } direction)
+			if (TerminalInput.ReadKeyOrNull() is { } key)
 			{
-				game.RequestTurn(direction);
+				if (key.MapDirection() is { } direction)
+				{
+					game.RequestTurn(direction);
+				}
+
+				if (key.MapSkill() is { })
+				{
+					game.RequestSprint();
+				}
 			}
 
 			previousSeconds = currentSeconds;

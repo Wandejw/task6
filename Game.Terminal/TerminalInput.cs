@@ -10,7 +10,7 @@ public static class TerminalInput
 	public static GameOverChoice? ReadGameOverChoice()
 		=> ReadKeyOrNull()?.MapGameOverChoice();
 
-	static ConsoleKey? ReadKeyOrNull()
+	public static ConsoleKey? ReadKeyOrNull()
 	=> Console.KeyAvailable
 	? Console.ReadKey(true).Key
 	: null;
@@ -30,6 +30,12 @@ public static class TerminalInput
 		{
 			ConsoleKey.A => GameOverChoice.Retry,
 			ConsoleKey.Escape => GameOverChoice.Exit,
+			_ => null
+		};
+
+		public Skill? MapSkill() => key switch
+		{
+			ConsoleKey.R => Skill.Sprint,
 			_ => null
 		};
 	}

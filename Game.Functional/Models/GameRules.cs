@@ -4,4 +4,7 @@ public record GameRules(
 	double MoveIntervalSeconds,
 	double FoodSpawnIntervalSeconds,
 	int FoodSpawnCount,
-	int FoodLimit);
+	int FoodLimit,
+	double SprintDurationSeconds,
+	double SprintCooldownSeconds,
+	double SprintSpeedMultiplier);

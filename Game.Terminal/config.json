@@ -1,0 +1,13 @@
+{
+	"Width": 20,
+	"Height": 12,
+	"Rules": {
+		"MoveIntervalSeconds": 0.2,
+		"FoodSpawnIntervalSeconds": 1,
+		"FoodSpawnCount": 2,
+		"FoodLimit": 8,
+		"SprintDurationSeconds": 5,
+		"SprintCooldownSeconds": 10,
+		"SprintSpeedMultiplier": 2
+	}
+}
